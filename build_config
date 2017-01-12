@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+OUTPUT=$1
+PWD=$(pwd)
+
+if [ -z "${OUTPUT}" ]; then
+	echo "Usage: $0 <output_file>"
+	exit 1
+fi
+
+rm -f ${OUTPUT}
+touch ${OUTPUT}
+
+if [ ! -d "bin" ]; then
+	mkdir bin
+fi
+
+echo "GOPATH=${GOPATH}:${PWD}" >> ${OUTPUT}
