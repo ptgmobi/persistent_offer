@@ -1,17 +1,17 @@
 package main
 
 import (
-	"time"
-
 	"github.com/dongjiahong/gotools"
 
-	fs "fetch_snapshot"
 	db "db_core"
+	fs "fetch_snapshot"
+	"search"
 )
 
 type Conf struct {
-	FetchSnapshotConf fs.Conf `json:"fetch_snapshot"`
-	DbConf			  db.Conf `json:"mysql_config"`
+	FetchSnapshotConf fs.Conf     `json:"fetch_snapshot"`
+	DbConf            db.Conf     `json:"mysql_config"`
+	SearchConf        search.Conf `json:"search"`
 }
 
 var gConf Conf
@@ -27,6 +27,9 @@ func main() {
 	}
 	go fetchService.Server()
 
-	// TODO SEARCH
-	time.Sleep(time.Hour)
+	searchService := search.NewService(&gConf.SearchConf, &gConf.DbConf)
+	if searchService == nil {
+		panic("create searchService failed!")
+	}
+	searchService.StartServer()
 }

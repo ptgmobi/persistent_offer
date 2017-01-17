@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -34,16 +35,15 @@ func NewDb(conf *Conf) (*DBCore, error) {
 		return nil, errors.New("open mysql failed, dbUri: " + dbUri)
 	}
 
-	return &DBCore {
-		conf: conf,
+	return &DBCore{
+		conf:      conf,
 		dbHandler: handler,
 	}, nil
 }
 
 // GetCurrentTables 获取当前数据库中的表
-func (db *DBCore) GetCurrentTables() ([]string, error) {
-
-	res := make([]string, 0, 48 * 7)
+func (db *DBCore) GetCurrentTables(prefix string) ([]string, error) {
+	res := make([]string, 0, 48*7)
 	querySQL := "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA=?;"
 	rows, err := db.dbHandler.Query(querySQL, db.conf.Database)
 	if err != nil {
@@ -55,14 +55,43 @@ func (db *DBCore) GetCurrentTables() ([]string, error) {
 		if err != nil {
 			return res, errors.New("Scan tableName err: " + err.Error())
 		}
-		res = append(res, tableName)
+		if strings.HasPrefix(tableName, prefix) {
+			res = append(res, tableName)
+		}
 	}
 	return res, nil
 }
 
+// GetDataWithString 获取表中数据并拼装返回
+func (db *DBCore) GetDataWithString(sqlQuery string) ([]string, error) {
+	rows, err := db.dbHandler.Query(sqlQuery)
+	defer rows.Close()
+	if err != nil {
+		return nil, err
+	}
+	res := make([]string, 0, 8)
+	for rows.Next() {
+		var tmp string
+		if err := rows.Scan(&tmp); err != nil {
+			return res, err
+		}
+		res = append(res, tmp)
+	}
+	return res, nil
+}
+
+// GetDataWithRows 获取数据并返回rows
+func (db *DBCore) GetDataWithRows(sqlQuery string) (*sql.Rows, error) {
+	rows, err := db.dbHandler.Query(sqlQuery)
+	if err != nil {
+		return nil, err
+	}
+	return rows, nil
+}
+
 // ExecSqlQuery向指定的表中插入数据
 func (db *DBCore) ExecSqlQuery(sqlQuery string) error {
-	_, err := db.dbHandler.Exec(sqlQuery,)
+	_, err := db.dbHandler.Exec(sqlQuery)
 	if err != nil {
 		return err
 	}
@@ -70,7 +99,6 @@ func (db *DBCore) ExecSqlQuery(sqlQuery string) error {
 }
 
 func (db *DBCore) ExecSqlQueryWithParameter(sqlQuery string, args ...interface{}) error {
-	fmt.Println("sql: ", sqlQuery)
 	stm, err := db.dbHandler.Prepare(sqlQuery)
 	defer stm.Close()
 	if err != nil {
