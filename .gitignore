@@ -2,3 +2,4 @@ bin/
 *.mk
 logs/
 *.log
+start.sh
