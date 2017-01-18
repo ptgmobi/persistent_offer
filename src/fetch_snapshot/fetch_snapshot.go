@@ -74,7 +74,7 @@ type Attribute struct {
 
 type AppDownload struct {
 	AppPkgName   string  `json:"app_pkg_name"`
-	Description  string  `json:"description"`
+	Description  string  `json:"-"`
 	Download     string  `json:"download"`
 	Rate         float32 `json:"rate"`
 	Review       int     `json:"review"`
@@ -181,7 +181,7 @@ func (s *Service) getCreateTableSqlQuery(tableName string) string {
 		adid char(255) not null comment 'offer id',
 		app_pkg_name char(255) comment 'app包名',
 		channel char(255) not null comment '渠道',
-		final_url char(255) comment '最终的app商店链接',
+		final_url varchar(512) comment '最终的app商店链接',
 		content json,
 		PRIMARY key(docid),
 		key idx_adid (adid)
