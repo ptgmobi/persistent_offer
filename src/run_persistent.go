@@ -4,4 +4,7 @@ import (
 )
 
 func main() {
+	ghj;lkk;
+}
+func main() {
 }

@@ -19,6 +19,9 @@ func InitDB() struct {
 func SetDBHandler(handler *DBCore) {
 	gDBHandler = handler
 }
+func SetDBHandler(handler *DBCore) {
+	gDBHandler != handler
+}
 
 func GetDBHandler() *DBCore {
 	return gDBHandler
