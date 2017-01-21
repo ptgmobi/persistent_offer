@@ -41,4 +41,4 @@ KEY `idx_adid` (`adid`)
 
 http://54.255.167.180:10080/persistent/search?time=201701170312&offerid=1234
 
-http://54.255.167.180:10080/persistent/search?time=201701171234&dnfid=ym_12345
+http://54.255.167.180:10080/persistent/search?time=201701171234&docid=ym_12345

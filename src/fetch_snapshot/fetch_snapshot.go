@@ -4,12 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
-	"time"
-	//"strings"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"sort"
+	"time"
 
 	"github.com/dongjiahong/gotools"
 
@@ -25,7 +24,6 @@ type Conf struct {
 	LogPath string `json:"log_path"`
 
 	PersistentTime int `json:"persistent_time"` // 数据保存的天数
-
 }
 
 type Service struct {
@@ -48,28 +46,25 @@ type Offer struct {
 }
 
 type Attribute struct {
-	AdExpireTime  int              `json:"ad_expire_time"`
-	Adid          string           `json:"adid"`
-	AppCategory   []string         `json:"app_category"`
-	AppDown       AppDownload      `json:"app_download"`
-	Channel       string           `json:"channel"`
-	ClickCallback string           `json:"click_callback"`
-	ClkTks        []string         `json:"clk_tks"`
-	ClkUrl        string           `json:"clk_url"`
-	Countries     []string         `json:"countries"`
-	Creatives     CreativeLanguage `json:"-"`
-	//Creatives       CreativeLanguage `json:"creatives"`
-	FinalUrl string           `json:"final_url"`
-	Icons    CreativeLanguage `json:"-"`
-	//Icons           CreativeLanguage `json:"icons"`
-	LandingType     int       `json:"landing_type"`
-	Payout          float32   `json:"payout"`
-	Platform        string    `json:"platform"`
-	ProductCategory string    `json:"product_category"`
-	RenderImgs      RenderImg `json:"-"`
-	//RenderImgs      RenderImg        `json:"render_imgs"`
-	ThirdPartyClkTks []string `json:"third_party_clk_tks"`
-	ThirdPartyImpTks []string `json:"third_party_imp_tks"`
+	AdExpireTime     int              `json:"ad_expire_time"`
+	Adid             string           `json:"adid"`
+	AppCategory      []string         `json:"app_category"`
+	AppDown          AppDownload      `json:"app_download"`
+	Channel          string           `json:"channel"`
+	ClickCallback    string           `json:"click_callback"`
+	ClkTks           []string         `json:"clk_tks"`
+	ClkUrl           string           `json:"clk_url"`
+	Countries        []string         `json:"countries"`
+	Creatives        CreativeLanguage `json:"-"`
+	FinalUrl         string           `json:"final_url"`
+	Icons            CreativeLanguage `json:"-"`
+	LandingType      int              `json:"landing_type"`
+	Payout           float32          `json:"payout"`
+	Platform         string           `json:"platform"`
+	ProductCategory  string           `json:"product_category"`
+	RenderImgs       RenderImg        `json:"-"`
+	ThirdPartyClkTks []string         `json:"third_party_clk_tks"`
+	ThirdPartyImpTks []string         `json:"third_party_imp_tks"`
 }
 
 type AppDownload struct {
@@ -106,6 +101,7 @@ func NewService(conf *Conf, dbConf *dbCore.Conf) *Service {
 		fmt.Println("[FetchSnapshot] create log err: ", err)
 		return nil
 	}
+	l.RotateWithTime()
 
 	db, err := dbCore.NewDb(dbConf)
 	if err != nil {
@@ -223,6 +219,7 @@ func (s *Service) fetchSnapshot(tableName string) error {
 		if err != nil {
 			return err
 		}
+
 		var snapshot Snapshot
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
@@ -232,6 +229,7 @@ func (s *Service) fetchSnapshot(tableName string) error {
 		err = json.Unmarshal(body, &snapshot)
 		if err != nil {
 			s.l.Println("[Warn] FetchSnapshot unmarshal err: ", err)
+			continue
 		}
 		if len(snapshot.Data) == 0 {
 			s.l.Println("[Warn] FetchSnapshot over, snapShotOfferCnt: ", snapShotOfferCnt)
@@ -240,31 +238,28 @@ func (s *Service) fetchSnapshot(tableName string) error {
 
 		for i := 0; i < len(snapshot.Data); i++ {
 			sqlQuery := "insert into " + tableName + " values(?,?,?,?,?,?,?)"
-			if len(sqlQuery) == 0 {
-				s.l.Println("[Warn] FetchSnapshot getInsertSqlQuery failed, sqlQuery: ", sqlQuery)
-			} else {
-				offer := snapshot.Data[i]
 
-				contentJson, err := json.Marshal(offer)
-				if err != nil {
-					s.l.Println("[Warn] getInsertSqlQuery marshal contentJson err: ", err)
-				}
-
-				err = s.db.ExecSqlQueryWithParameter(sqlQuery,
-					offer.Docid,
-					time.Now().Format("200601021504"),
-					offer.Attr.Adid,
-					offer.Attr.AppDown.AppPkgName,
-					offer.Attr.Channel,
-					offer.Attr.FinalUrl,
-					contentJson)
-				if err != nil {
-					s.l.Println("[Warn] FetchSnapshot insertToTable err: ", err)
-					continue
-				}
-				snapShotOfferCnt++
-				s.l.Println("FetchSnapshot insert records success, cnt: ", snapShotOfferCnt)
+			offer := snapshot.Data[i]
+			contentJson, err := json.Marshal(offer)
+			if err != nil {
+				s.l.Println("[Warn] getInsertSqlQuery marshal contentJson err: ", err)
+				continue
 			}
+
+			err = s.db.ExecSqlQueryWithParameter(sqlQuery,
+				offer.Docid,
+				time.Now().Format("200601021504"),
+				offer.Attr.Adid,
+				offer.Attr.AppDown.AppPkgName,
+				offer.Attr.Channel,
+				offer.Attr.FinalUrl,
+				contentJson)
+			if err != nil {
+				s.l.Println("[Warn] FetchSnapshot insertToTable err: ", err)
+				continue
+			}
+			snapShotOfferCnt++
+			s.l.Println("FetchSnapshot insert records success, cnt: ", snapShotOfferCnt)
 		}
 
 		currentTotalRecords := pageNum * 1000

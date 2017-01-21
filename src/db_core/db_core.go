@@ -49,6 +49,8 @@ func (db *DBCore) GetCurrentTables(prefix string) ([]string, error) {
 	if err != nil {
 		return res, errors.New("InitCurrentTables failed " + err.Error())
 	}
+	defer rows.Close()
+
 	for rows.Next() {
 		var tableName string
 		err := rows.Scan(&tableName)
@@ -65,10 +67,11 @@ func (db *DBCore) GetCurrentTables(prefix string) ([]string, error) {
 // GetDataWithString 获取表中数据并拼装返回
 func (db *DBCore) GetDataWithString(sqlQuery string) ([]string, error) {
 	rows, err := db.dbHandler.Query(sqlQuery)
-	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
+
 	res := make([]string, 0, 8)
 	for rows.Next() {
 		var tmp string
@@ -80,16 +83,17 @@ func (db *DBCore) GetDataWithString(sqlQuery string) ([]string, error) {
 	return res, nil
 }
 
-// GetDataWithRows 获取数据并返回rows
-func (db *DBCore) GetDataWithRows(sqlQuery string) (*sql.Rows, error) {
+// GetRows 获取数据并返回rows
+func (db *DBCore) GetRows(sqlQuery string) (*sql.Rows, error) {
 	rows, err := db.dbHandler.Query(sqlQuery)
 	if err != nil {
 		return nil, err
 	}
+
 	return rows, nil
 }
 
-// ExecSqlQuery向指定的表中插入数据
+// ExecSqlQuery 执行sql语句
 func (db *DBCore) ExecSqlQuery(sqlQuery string) error {
 	_, err := db.dbHandler.Exec(sqlQuery)
 	if err != nil {
@@ -100,10 +104,10 @@ func (db *DBCore) ExecSqlQuery(sqlQuery string) error {
 
 func (db *DBCore) ExecSqlQueryWithParameter(sqlQuery string, args ...interface{}) error {
 	stm, err := db.dbHandler.Prepare(sqlQuery)
-	defer stm.Close()
 	if err != nil {
 		return err
 	}
+	defer stm.Close()
 
 	_, err = stm.Exec(args...)
 	if err != nil {

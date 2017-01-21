@@ -49,6 +49,7 @@ func NewService(conf *Conf, dbConf *dbCore.Conf) *Service {
 		fmt.Println("[NewService] create log err: ", err)
 		return nil
 	}
+	l.RotateWithTime()
 
 	db, err := dbCore.NewDb(dbConf)
 	if err != nil {
@@ -122,10 +123,10 @@ func (s *Service) HandlerSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// http://127.0.0.1:10080/persistent/search?time=&offerid=
-	// http://127.0.0.1:10080/persistent/search?time=&dnfid=
+	// http://127.0.0.1:10080/persistent/search?time=&docid=
 	var res string
 	time := r.Form.Get("time")
-	time = time[:12] //
+	time = time[:12] // 只保留到分钟级别
 	docid := r.Form.Get("docid")
 	offerid := r.Form.Get("offerid")
 
@@ -165,12 +166,12 @@ func (s *Service) getSnapshot(time string, docid string, offerid string) (string
 			sqlQuery = "select insertDate, content from " + nearTable + " where adid='" + offerid + "';"
 		}
 
-		rows, err := s.db.GetDataWithRows(sqlQuery)
-		defer rows.Close()
+		rows, err := s.db.GetRows(sqlQuery)
 		if err != nil {
 			s.l.Println("[Warn] getSnapshot query failed: ", err, " sqlQuery: ", sqlQuery)
 			return "query db failed", nil
 		}
+		defer rows.Close()
 
 		for rows.Next() {
 			var insertDate string
@@ -202,6 +203,7 @@ func (s *Service) getSnapshot(time string, docid string, offerid string) (string
 func (s *Service) getNearTable(time string, tables []string) string {
 	var min int
 	var resTable string
+
 	timeInt, _ := strconv.Atoi(time)
 	sort.Strings(tables)
 	for i := 0; i < len(tables); i++ {
@@ -219,7 +221,7 @@ func (s *Service) getNearTable(time string, tables []string) string {
 			resTable = tables[i]
 		}
 		tmp := timeInt - dateInt
-		if tmp > 0 && tmp < min {
+		if tmp >= 0 && tmp < min {
 			min = tmp
 			resTable = tables[i]
 		}
