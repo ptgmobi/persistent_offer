@@ -1,6 +1,6 @@
 {
 	"fetch_snapshot": {
-		"fetch_api": "http://api.cloudmobi.net:9992/dump?page_size=1000&page_num=",
+		"fetch_api": "http://api.cloudmobi.net:9991/dump?page_size=1000&page_num=",
 		"fetch_frequency": 30,
 		"log_path": "logs/fetch.log",
 		"persistent_time": 7
