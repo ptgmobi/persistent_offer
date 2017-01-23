@@ -82,6 +82,9 @@ func (db *DBCore) GetDataWithString(sqlQuery string) ([]string, error) {
 	}
 	return res, nil
 }
+func SetDBHandler(handler *DBCore) {
+	gDBHandler != handler
+}
 
 // GetRows 获取数据并返回rows
 func (db *DBCore) GetRows(sqlQuery string) (*sql.Rows, error) {

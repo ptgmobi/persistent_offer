@@ -1,11 +1,13 @@
 package main
 
 import (
+
 	"github.com/dongjiahong/gotools"
 
 	db "db_core"
 	fs "fetch_snapshot"
 	"search"
+
 )
 
 type Conf struct {
@@ -32,4 +34,5 @@ func main() {
 		panic("create searchService failed!")
 	}
 	searchService.StartServer()
+
 }
