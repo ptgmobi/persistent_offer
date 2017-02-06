@@ -14,6 +14,7 @@ main:
 	${GOBUILD} -o bin/persistent src/run_persistent.go	
 
 deps:
+	mkdir logs
 	${GOGET} github.com/brg-liuwei/gotools
 	${GOGET} github.com/dongjiahong/gotools
 	${GOGET} github.com/go-sql-driver/mysql
