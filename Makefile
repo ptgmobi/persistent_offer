@@ -18,5 +18,8 @@ deps:
 	${GOGET} github.com/dongjiahong/gotools
 	${GOGET} github.com/go-sql-driver/mysql
 
+test:
+	./auto_test.sh
+
 clean:
 	@rm bin/persistent
