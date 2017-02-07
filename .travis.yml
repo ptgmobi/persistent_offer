@@ -20,7 +20,7 @@ script:
   - make test
 
 after_success:
-  - base <(curl -s https://codecov.io/bash)
+  - bash <(curl -s https://codecov.io/bash) -t 9e6ce202-72d2-49b8-8aef-f124229cae8d
 
 notifications:
   slack:

@@ -1,5 +1,7 @@
 # persistent_offer
 offer持久化服务
+[![codecov](https://codecov.io/gh/cloudadrd/persistent_offer/branch/master/graph/badge.svg?token=a1oJCu387u)](https://codecov.io/gh/cloudadrd/persistent_offer)
+
 
 ## 数据库
 ### 数据库信息
