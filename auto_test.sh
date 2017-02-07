@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+PWD=$(pwd)
+COVFILE=${PWD}/coverage.txt
+
 function test_and_append_coverage() {
 	pushd $1 > /dev/null
 	go test -v -coverprofile=profile.out -covermode=atomic
@@ -9,9 +12,6 @@ function test_and_append_coverage() {
 	fi
 	popd > /dev/null
 }
-
-PWD=$(pwd)
-COVFILE=${PWD}/coverage.txt
 
 set -e
 echo "" > ${COVFILE}
