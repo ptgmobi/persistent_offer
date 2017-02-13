@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"log"
+	"sync"
 	"net/http"
 	"sort"
 	"time"
@@ -34,6 +35,7 @@ type Service struct {
 	db   *dbCore.DBCore
 
 	domain_api string
+	apiLock sync.Mutex
 }
 
 type Snapshot struct {
@@ -124,7 +126,11 @@ func NewService(conf *Conf, dbConf *dbCore.Conf) *Service {
 
 // Server 该函数准备新表,调用入库数据，并删除旧表
 func (s *Service) Server() {
-	s.domain_api = s.conf.FetchApi // 保存domain形式的api
+	{
+		s.apiLock.Lock()
+		s.domain_api = s.conf.FetchApi // 保存domain形式的api
+		s.apiLock.Unlock()
+	}
 
 	go s.checkIpApi()
 
@@ -177,13 +183,21 @@ func (s *Service) checkIpApi() {
 			}
 			if err != nil {
 				if (apiNum+1) == len(s.conf.FetchIpApi) { // 最后一个ipapi也不行还是用域名吧！
-					s.conf.FetchApi = s.domain_api
+					{
+						s.apiLock.Lock()
+						s.conf.FetchApi = s.domain_api
+						s.apiLock.Unlock()
+					}
 					s.l.Println("checkIpApi ipapi don't work use domain api")
 				}
 				continue
 			}
 			if resp.StatusCode == 200 {
-				s.conf.FetchApi = s.conf.FetchIpApi[apiNum]
+				{
+					s.apiLock.Lock()
+					s.conf.FetchApi = s.conf.FetchIpApi[apiNum]
+					s.apiLock.Unlock()
+				}
 				s.l.Println("checkIpApi use ipapi: ", s.conf.FetchIpApi[apiNum])
 				break
 			}
@@ -236,7 +250,11 @@ func (s *Service) getDeleteTableSqlQuery(tableName string) string {
 }
 
 func (s *Service) fetchSnapshot(tableName string) error {
-	fetchApi := s.conf.FetchApi
+	{
+		s.apiLock.Lock()
+		fetchApi := s.conf.FetchApi
+		s.apiLock.Unlock()
+	}
 	if len(s.conf.FetchApi) == 0 || len(tableName) == 0 {
 		s.l.Println(" >>>>> FetchApi is nil or tableName is nil, api: ", s.conf.FetchApi,
 			" tableName: ", tableName)
