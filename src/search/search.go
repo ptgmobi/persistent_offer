@@ -34,7 +34,7 @@ type Service struct {
 
 type WrapOffer struct {
 	InsertTime string   `json:"record_time"`
-	Offer      fs.Offer `json:"offer"`
+	Offer      *fs.Offer `json:"offer,omitempty"`
 }
 
 type ResultData struct {
@@ -126,7 +126,9 @@ func (s *Service) HandlerSearch(w http.ResponseWriter, r *http.Request) {
 	// http://127.0.0.1:10080/persistent/search?time=&docid=
 	var res string
 	time := r.Form.Get("time")
-	time = time[:12] // 只保留到分钟级别
+	if len(time) > 0 {
+		time = time[:12] // 只保留到分钟级别
+	}
 	docid := r.Form.Get("docid")
 	offerid := r.Form.Get("offerid")
 
@@ -143,15 +145,29 @@ func (s *Service) HandlerSearch(w http.ResponseWriter, r *http.Request) {
 func (s *Service) getSnapshot(time string, docid string, offerid string) (string, []WrapOffer) {
 	// time = 201701161732
 	currentTables, err := s.db.GetCurrentTables(fs.Table_prefix)
-	res := make([]WrapOffer, 0, 8)
 	if err != nil {
 		s.l.Println("[Warn] GetCurrentTables err: ", err)
 		return "get table info err", nil
 	}
-	s.l.Println("currentTables tables: ", currentTables)
+	s.l.Println("currentTables tables size: ", len(currentTables))
+	var allRes []WrapOffer
 	if len(time) == 0 { // 没有传时间将会把所有表里的结果返回
-		// TODO
-		return "need time parameter", nil
+		sort.Strings(currentTables)
+		for i := 0; i < len(currentTables); i++ {
+			var sqlQuery string
+			if len(offerid) == 0 {
+				sqlQuery = "select insertDate, content from " + currentTables[i] + " where docid='" + docid + "';"
+			}
+			if len(docid) == 0 {
+				sqlQuery = "select insertDate, content from " + currentTables[i] + " where adid='" + offerid + "';"
+			}
+			errInfo, res := s.queryDb(sqlQuery, true)
+			if len(errInfo) != 0 {
+				s.l.Println("[Warn] getSnapshot get offer err: ", errInfo)
+			}
+			allRes = append(allRes, res...)
+		}
+
 	} else { // 获取给定时间最近的上一个时间节点的表
 		nearTable := s.getNearTable(time, currentTables)
 		if len(nearTable) == 0 {
@@ -166,38 +182,61 @@ func (s *Service) getSnapshot(time string, docid string, offerid string) (string
 			sqlQuery = "select insertDate, content from " + nearTable + " where adid='" + offerid + "';"
 		}
 
-		rows, err := s.db.GetRows(sqlQuery)
-		if err != nil {
-			s.l.Println("[Warn] getSnapshot query failed: ", err, " sqlQuery: ", sqlQuery)
-			return "query db failed", nil
+		errInfo, res := s.queryDb(sqlQuery, false)
+		if len(errInfo) != 0 {
+			s.l.Println("[Warn] getSnapshot get offer err: ", errInfo)
+		} else {
+			allRes = res
 		}
-		defer rows.Close()
+	}
 
-		for rows.Next() {
-			var insertDate string
-			var offerStr string
-			var offer fs.Offer
-			if err := rows.Scan(&insertDate, &offerStr); err != nil {
-				s.l.Println("[Warn] Scan rows err: ", err, " sqlQuery: ", sqlQuery)
-				continue
-			}
-			err := json.Unmarshal([]byte(offerStr), &offer)
-			if err != nil {
-				s.l.Println("[Warn] Unmarshal offer err: ", err, " row: ", offerStr)
-				continue
-			}
+	if allRes != nil {
+		return "offer is valid", allRes
+	} else {
+		return "offer is invalid", nil
+	}
+}
+
+func (s *Service) queryDb(sqlQuery string, sketch bool) (string, []WrapOffer) {
+	if len(sqlQuery) == 0 {
+		return "[Warn] queryDb sqlQuery is nil", nil
+	}
+	res := make([]WrapOffer, 0, 200)
+	rows, err := s.db.GetRows(sqlQuery)
+	if err != nil {
+		res := "[Warn] queryDb query failed: " + err.Error() + " sqlQuery: " + sqlQuery
+		return res, nil
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var insertDate string
+		var offerStr string
+		var offer fs.Offer
+		if err := rows.Scan(&insertDate, &offerStr); err != nil {
+			res := "[Warn] queryDb Scan rows err: " + err.Error() + " sqlQuery: " + sqlQuery
+			return res, nil
+		}
+		err := json.Unmarshal([]byte(offerStr), &offer)
+		if err != nil {
+			res := "[Warn] queryDb Unmarshal offer err: " + err.Error() + " row: " + offerStr
+			return res, nil
+		}
+		if sketch {
 			var wrapOffer = WrapOffer{
 				InsertTime: insertDate,
-				Offer:      offer,
+			}
+			res = append(res, wrapOffer)
+
+		} else {
+			var wrapOffer = WrapOffer{
+				InsertTime: insertDate,
+				Offer:      &offer,
 			}
 			res = append(res, wrapOffer)
 		}
-		if len(res) != 0 {
-			return "offer is valid", res
-		} else {
-			return "offer is invalid", nil
-		}
 	}
+	return "", res
 }
 
 func (s *Service) getNearTable(time string, tables []string) string {
