@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"log"
 	"net/http"
 	"sort"
@@ -20,6 +21,7 @@ var Table_prefix = "offer_persistent_"
 type Conf struct {
 	FetchApi       string `json:"fetch_api"`
 	FetchFrequency int    `json:"fetch_frequency"` // fetch 频率（分钟）
+	FetchIpApi	   []string `json:"direct_ip_api"`
 
 	LogPath string `json:"log_path"`
 
@@ -30,6 +32,8 @@ type Service struct {
 	conf *Conf
 	l    *gotools.RotateLog
 	db   *dbCore.DBCore
+
+	domain_api string
 }
 
 type Snapshot struct {
@@ -120,6 +124,10 @@ func NewService(conf *Conf, dbConf *dbCore.Conf) *Service {
 
 // Server 该函数准备新表,调用入库数据，并删除旧表
 func (s *Service) Server() {
+	s.domain_api = s.conf.FetchApi // 保存domain形式的api
+
+	go s.checkIpApi()
+
 	for {
 		s.l.Println("go fetch offer!")
 		// 准备新表
@@ -149,6 +157,39 @@ func (s *Service) Server() {
 
 		s.deleteOldTable(tables)
 		time.Sleep(time.Duration(s.conf.FetchFrequency) * time.Minute)
+	}
+}
+
+// checkIpApi 用来判断使用ip直接请求的数据的链接是否有效，如果无效则使用域名进行访问
+// 主要是解决域名访问会造成一定上数据不一致问题！
+func (s *Service) checkIpApi() {
+	if len(s.conf.FetchIpApi) == 0 {
+		s.l.Println("checkIpApi can't find ipApi")
+		os.Exit(1)
+	}
+	for {
+		for apiNum:=0; apiNum < len(s.conf.FetchIpApi); apiNum++ {
+			uri := fmt.Sprintf("%s%d", s.conf.FetchIpApi[apiNum], 1)
+			s.l.Println("checkIpApi uri: ", uri)
+			resp, err := http.Get(uri)
+			if resp != nil {
+				defer resp.Body.Close()
+			}
+			if err != nil {
+				if (apiNum+1) == len(s.conf.FetchIpApi) { // 最后一个ipapi也不行还是用域名吧！
+					s.conf.FetchApi = s.domain_api
+					s.l.Println("checkIpApi ipapi don't work use domain api")
+				}
+				continue
+			}
+			if resp.StatusCode == 200 {
+				s.conf.FetchApi = s.conf.FetchIpApi[apiNum]
+				s.l.Println("checkIpApi use ipapi: ", s.conf.FetchIpApi[apiNum])
+				break
+			}
+		}
+
+		time.Sleep(time.Minute * 5)  // 每5分钟测试一次
 	}
 }
 
@@ -195,6 +236,7 @@ func (s *Service) getDeleteTableSqlQuery(tableName string) string {
 }
 
 func (s *Service) fetchSnapshot(tableName string) error {
+	fetchApi := s.conf.FetchApi
 	if len(s.conf.FetchApi) == 0 || len(tableName) == 0 {
 		s.l.Println(" >>>>> FetchApi is nil or tableName is nil, api: ", s.conf.FetchApi,
 			" tableName: ", tableName)
@@ -210,7 +252,7 @@ func (s *Service) fetchSnapshot(tableName string) error {
 			s.l.Println("[Warn] FetchSnapshot pageNum >= 100 !")
 		}
 
-		uri := fmt.Sprintf("%s%d", s.conf.FetchApi, pageNum)
+		uri := fmt.Sprintf("%s%d", fetchApi, pageNum)
 		s.l.Println("FetchSnapshot FetchApi: ", uri)
 		resp, err := http.Get(uri)
 		if resp != nil {
