@@ -118,6 +118,6 @@ http://54.255.167.180:10080/persistent/search?docid=2644357
 "snapshots": [
 {"record_time": "201702131449"},
 {"record_time": "201702131456"},
-{"record_time": "201702131500"}
+{"record_time": "201702131500"}]
 }
 ```
