@@ -190,7 +190,7 @@ func (s *Service) getSnapshot(time string, docid string, offerid string) (string
 		}
 	}
 
-	if allRes != nil {
+	if len(allRes) > 0 {
 		return "offer is valid", allRes
 	} else {
 		return "offer is invalid", nil
