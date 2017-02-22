@@ -227,7 +227,6 @@ func (s *Service) queryDb(sqlQuery string, sketch bool) (string, []WrapOffer) {
 				InsertTime: insertDate,
 			}
 			res = append(res, wrapOffer)
-
 		} else {
 			var wrapOffer = WrapOffer{
 				InsertTime: insertDate,
