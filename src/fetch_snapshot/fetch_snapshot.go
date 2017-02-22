@@ -45,6 +45,7 @@ type Snapshot struct {
 
 type Offer struct {
 	Active bool      `json:"active"`
+	Comment string `json:"comment,omitempty"`
 	Dnf    string    `json:"dnf"`
 	Docid  string    `json:"docid"`
 	Name   string    `json:"name"`
