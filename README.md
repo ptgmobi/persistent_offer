@@ -41,11 +41,11 @@ KEY `idx_adid` (`adid`)
 
 请求查询
 
-|key|必须|说明|
-|:-:|:-:|:---:|
-|time|否|给定时间点精确到分钟如：201702131450|
-|offerid|是，但是跟docid互斥|给定需要查询的offerid，可能重复如ym_123和iym_123|
-|docid|是,跟offerid互斥|给定精准查询的docid如：ym_1234|
+|   key   |      必须      |                 说明                 |
+| :-----: | :----------: | :--------------------------------: |
+|  time   |      否       |      给定时间点精确到分钟如：201702131450      |
+| offerid | 是，但是跟docid互斥 | 给定需要查询的offerid，可能重复如ym_123和iym_123 |
+|  docid  | 是,跟offerid互斥 |       给定精准查询的docid如：ym_1234        |
 
 #### 示例：
 
@@ -121,3 +121,58 @@ http://54.255.167.180:10080/persistent/search?docid=2644357
 {"record_time": "201702131500"}]
 }
 ```
+
+通过title进行模糊查询
+http://54.255.167.180:10080/persistent/search?title=今日&time=201702221339
+
+```json
+{
+"message": "offer is valid",
+"status": true,
+"snapshots": [
+	{
+	"record_time": "201702221339",
+	"offer": {
+		"active": true,
+		"dnf": "( platform in { iOS } and country in { CN,DEBUG } and channel in { ym,any } )",
+		"docid": "ym_1051717",
+		"name": "",
+			"attr": {
+			"ad_expire_time": 1000,
+			"adid": "1051717",
+			"app_category": [
+				"tool",
+				"News",
+				"news",
+				"books"
+			],
+			"app_download": {
+				"app_pkg_name": "529092160",
+				"download": "",
+				"rate": 4.5,
+				"review": 0,
+				"size": "87 MB",
+				"title": "今日头条 - 推荐阅读热点新闻、资讯、视频",
+				"tracking_link": "https://global.ymtracking.com/trace?offer_id=1051717&app_id=131&type=ffc5dc6300000002"
+			},
+			"channel": "ym",
+			"click_callback": "",
+			"clk_tks": [ ],
+			"clk_url": "",
+			"countries": [
+				"CN"
+			],
+			"final_url": "https://itunes.apple.com/app/id529092160",
+			"landing_type": 0,
+			"payout": 2.7,
+			"platform": "iOS",
+			"product_category": "googleplaydownload",
+			"third_party_clk_tks": [ ],
+			"third_party_imp_tks": [ ]
+            }
+    	}
+    }
+	]
+}
+```
+
