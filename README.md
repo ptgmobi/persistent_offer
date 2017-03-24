@@ -124,7 +124,8 @@ http://54.255.167.180:10080/persistent/search?docid=2644357
 
 通过title进行模糊查询
 http://54.255.167.180:10080/persistent/search?title=今日&time=201702221339
-
+* 模糊搜索时，title查询的范围不仅仅是title，还包括package name等其他属性
+* 输入的时间如果没有找到完全相同的记录，则匹配一个与输入时间最接近的时间
 ```json
 {
 "message": "offer is valid",
