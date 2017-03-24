@@ -190,28 +190,34 @@ func (s *Service) getSnapshot(time, docid, offerid, title, begin, end string) (s
 			allRes = append(allRes, res...)
 		}
 
-	} else { // 获取给定时间最近的上一个时间节点的表
-		nearTable := s.getNearTable(time, currentTables)
-		if len(nearTable) == 0 {
+	} else { // 如果给定时间，返回距离给定时间最近的上一次出现的结果
+		nearTables := s.getNearTable(time, currentTables)
+		if len(nearTables) == 0 {
 			return "can't find data whith this time", nil
 		}
 
-		var sqlQuery string
-		if len(offerid) != 0 {
-			sqlQuery = "select insertDate, content from " + nearTable + " where adid='" + offerid + "';"
-		} else if len(docid) != 0 {
-			sqlQuery = "select insertDate, content from " + nearTable + " where docid='" + docid + "';"
-		} else if len(title) != 0 {
-			sqlQuery = "select insertDate, content from " + nearTable + " where content like '%" + title + "%' limit " + begin + "," + end + ";"
-		} else {
-			s.l.Println("on condition can be used, on time")
-		}
+		for i := len(nearTables) - 1; i >= 0; i-- {
+			nearTable := nearTables[i]
+			var sqlQuery string
+			if len(offerid) != 0 {
+				sqlQuery = "select insertDate, content from " + nearTable + " where adid='" + offerid + "';"
+			} else if len(docid) != 0 {
+				sqlQuery = "select insertDate, content from " + nearTable + " where docid='" + docid + "';"
+			} else if len(title) != 0 {
+				sqlQuery = "select insertDate, content from " + nearTable + " where content like '%" + title + "%' limit " + begin + "," + end + ";"
+			} else {
+				s.l.Println("on condition can be used, on time")
+			}
 
-		errInfo, res := s.queryDb(sqlQuery, false)
-		if len(errInfo) != 0 {
-			s.l.Println("[Warn] getSnapshot get offer err: ", errInfo)
-		} else {
-			allRes = res
+			errInfo, res := s.queryDb(sqlQuery, false)
+			if len(errInfo) != 0 {
+				s.l.Println("[Warn] getSnapshot get offer err: ", errInfo)
+			} else {
+				if len(res) > 0 {
+					allRes = append(allRes, res...)
+					break
+				}
+			}
 		}
 	}
 
@@ -263,9 +269,8 @@ func (s *Service) queryDb(sqlQuery string, sketch bool) (string, []WrapOffer) {
 	return "", res
 }
 
-func (s *Service) getNearTable(time string, tables []string) string {
-	var min int
-	var resTable string
+func (s *Service) getNearTable(time string, tables []string) []string {
+	var resTables []string
 
 	timeInt, _ := strconv.Atoi(time)
 	sort.Strings(tables)
@@ -276,20 +281,11 @@ func (s *Service) getNearTable(time string, tables []string) string {
 			continue
 		}
 		dateInt, _ := strconv.Atoi(date[2])
-		if i == 0 {
-			if timeInt < dateInt {
-				return resTable // 时间点太靠前，没有对应表
-			}
-			min = timeInt - dateInt
-			resTable = tables[i]
-		}
-		tmp := timeInt - dateInt
-		if tmp >= 0 && tmp < min {
-			min = tmp
-			resTable = tables[i]
+		if timeInt-dateInt >= 0 {
+			resTables = append(resTables, tables[i])
 		}
 	}
-	return resTable
+	return resTables
 }
 
 func (s *Service) StartServer() {
