@@ -90,6 +90,8 @@ func (s *Service) checkoutParmeter(form url.Values) (bool, string) {
 	offerid := form.Get("offerid")
 	title := form.Get("title")
 	time := form.Get("time")
+	begin := form.Get("begin")
+	end := form.Get("end")
 
 	if len(docid) == 0 && len(offerid) == 0 && len(title) == 0 {
 		return false, "need docid or offerid"
@@ -104,9 +106,20 @@ func (s *Service) checkoutParmeter(form url.Values) (bool, string) {
 	if len(time) != 0 {
 		// 时间只要分钟级别 如：201701161330
 		if len(time) < 12 {
-			return false, "check the time parmeter, example: 101701161230"
+			return false, "check the time parameter, example: 101701161230"
 		}
 	}
+	if len(begin) > 0 {
+		if beginInt, err := strconv.Atoi(begin); err != nil || beginInt < 0 {
+			return false, "check the begin parameter, example: 1"
+		}
+	}
+	if len(end) > 0 {
+		if endInt, err := strconv.Atoi(end); err != nil || endInt < 0 {
+			return false, "check the end parameter, example: 2"
+		}
+	}
+
 	return true, ""
 }
 
@@ -115,7 +128,7 @@ func (s *Service) HandlerSearch(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	w.Header().Set("Content-type", "application/json")
+	w.Header().Set("Content-type", "application/json; charset=utf8")
 	r.ParseForm()
 	check, msg := s.checkoutParmeter(r.Form)
 	if !check {
@@ -133,8 +146,14 @@ func (s *Service) HandlerSearch(w http.ResponseWriter, r *http.Request) {
 	docid := r.Form.Get("docid")
 	offerid := r.Form.Get("offerid")
 	title := r.Form.Get("title")
+	begin := r.Form.Get("begin")
+	end := r.Form.Get("end")
+	if len(begin) == 0 || len(end) == 0 {
+		begin = "0"
+		end = "50"
+	}
 
-	msg, data := s.getSnapshot(time, docid, offerid, title)
+	msg, data := s.getSnapshot(time, docid, offerid, title, begin, end)
 	res, err := s.wrapResultData(msg, true, data)
 	if err != nil {
 		s.l.Println(err.Error(), " docid: ", docid, " offerid: ", offerid, " time: ", time)
@@ -144,7 +163,7 @@ func (s *Service) HandlerSearch(w http.ResponseWriter, r *http.Request) {
 }
 
 // 从数据库中获取offer
-func (s *Service) getSnapshot(time, docid, offerid, title string) (string, []WrapOffer) {
+func (s *Service) getSnapshot(time, docid, offerid, title, begin, end string) (string, []WrapOffer) {
 	// time = 201701161732
 	currentTables, err := s.db.GetCurrentTables(fs.Table_prefix)
 	if err != nil {
@@ -183,7 +202,7 @@ func (s *Service) getSnapshot(time, docid, offerid, title string) (string, []Wra
 		} else if len(docid) != 0 {
 			sqlQuery = "select insertDate, content from " + nearTable + " where docid='" + docid + "';"
 		} else if len(title) != 0 {
-			sqlQuery = "select insertDate, content from " + nearTable + " where content like '%" + title + "%';"
+			sqlQuery = "select insertDate, content from " + nearTable + " where content like '%" + title + "%' limit " + begin + "," + end + ";"
 		} else {
 			s.l.Println("on condition can be used, on time")
 		}
