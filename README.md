@@ -127,6 +127,10 @@ http://54.255.167.180:10080/persistent/search?title=今日&time=201702221339&beg
 
 `begin`和`end`两个参数将会添加到sql里的额limit后以实现分页，不提供这两个参数默认返回0-50条记录
 
+* 模糊搜索时，title查询的范围不仅仅是title，还包括package name等其他属性
+* 输入的时间如果没有找到完全相同的记录，则匹配一个与输入时间最接近的时间
+
+
 ```json
 {
 "message": "offer is valid",
