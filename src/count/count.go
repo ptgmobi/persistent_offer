@@ -118,8 +118,7 @@ func Server() {
 		t := time.Now().UTC()
 		date := t.Format("200601021504")
 		hour := date[8:10]
-		//date = "2017030911"
-		var table = getReadDbName(date)
+		var table = getReadDbName(date[0:10])
 
 		if table != "" {
 			if records, err := getData(table, func(data *RawData) []*Count {
