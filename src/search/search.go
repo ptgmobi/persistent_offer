@@ -15,6 +15,7 @@ import (
 	"github.com/dongjiahong/gotools"
 	_ "github.com/go-sql-driver/mysql"
 
+	"count"
 	dbCore "db_core"
 	fs "fetch_snapshot"
 )
@@ -41,6 +42,11 @@ type ResultData struct {
 	Msg    string      `json:"message"`
 	Status bool        `json:"status"`
 	Data   []WrapOffer `json:"snapshots"`
+}
+
+type WrapCount struct {
+	Num    int64  `json:"offer_num"`
+	ErrMsg string `json:"err_msg"`
 }
 
 func NewService(conf *Conf, dbConf *dbCore.Conf) *Service {
@@ -128,7 +134,7 @@ func (s *Service) HandlerSearch(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	w.Header().Set("Content-type", "application/json; charset=utf8")
+	w.Header().Set("Content-type", "application/json; charset=utf-8")
 	r.ParseForm()
 	check, msg := s.checkoutParmeter(r.Form)
 	if !check {
@@ -288,8 +294,36 @@ func (s *Service) getNearTable(time string, tables []string) []string {
 	return resTables
 }
 
+func HandlerCount(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	w.Header().Set("Content-type", "application/json; charset=utf-8")
+	r.ParseForm()
+	dimension := r.Form.Get("dimension")
+	condition := r.Form.Get("condition")
+	date := r.Form.Get("date")
+	num, err := count.CountWithDimension(dimension, condition, date)
+	var wrapRes WrapCount
+	if err != nil {
+		log.Println("HandlerCount err: ", err)
+		wrapRes.Num = num
+		wrapRes.ErrMsg = err.Error()
+	} else {
+		wrapRes.Num = num
+		wrapRes.ErrMsg = "ok"
+	}
+	resByte, _ := json.Marshal(&wrapRes)
+	w.Write(resByte)
+	return
+
+}
+
 func (s *Service) StartServer() {
 	http.HandleFunc(s.conf.SearchPath, s.HandlerSearch)
+
+	http.HandleFunc("/count", HandlerCount)
 
 	panic(http.ListenAndServe(s.conf.Host+":"+s.conf.Port, nil))
 }

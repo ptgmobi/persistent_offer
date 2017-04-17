@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"log"
-	"sync"
 	"net/http"
+	"os"
 	"sort"
+	"sync"
 	"time"
 
 	"github.com/dongjiahong/gotools"
@@ -20,9 +20,9 @@ import (
 var Table_prefix = "offer_persistent_"
 
 type Conf struct {
-	FetchApi       string `json:"fetch_api"`
-	FetchFrequency int    `json:"fetch_frequency"` // fetch 频率（分钟）
-	FetchIpApi	   []string `json:"direct_ip_api"`
+	FetchApi       string   `json:"fetch_api"`
+	FetchFrequency int      `json:"fetch_frequency"` // fetch 频率（分钟）
+	FetchIpApi     []string `json:"direct_ip_api"`
 
 	LogPath string `json:"log_path"`
 
@@ -35,7 +35,7 @@ type Service struct {
 	db   *dbCore.DBCore
 
 	domain_api string
-	apiLock sync.Mutex
+	apiLock    sync.Mutex
 }
 
 type Snapshot struct {
@@ -44,12 +44,12 @@ type Snapshot struct {
 }
 
 type Offer struct {
-	Active bool      `json:"active"`
-	Comment string `json:"comment,omitempty"`
-	Dnf    string    `json:"dnf"`
-	Docid  string    `json:"docid"`
-	Name   string    `json:"name"`
-	Attr   Attribute `json:"attr"`
+	Active  bool      `json:"active"`
+	Comment string    `json:"comment,omitempty"`
+	Dnf     string    `json:"dnf"`
+	Docid   string    `json:"docid"`
+	Name    string    `json:"name"`
+	Attr    Attribute `json:"attr"`
 }
 
 type Attribute struct {
@@ -174,7 +174,7 @@ func (s *Service) checkIpApi() {
 		os.Exit(1)
 	}
 	for {
-		for apiNum:=0; apiNum < len(s.conf.FetchIpApi); apiNum++ {
+		for apiNum := 0; apiNum < len(s.conf.FetchIpApi); apiNum++ {
 			uri := fmt.Sprintf("%s%d", s.conf.FetchIpApi[apiNum], 1)
 			s.l.Println("checkIpApi uri: ", uri)
 			resp, err := http.Get(uri)
@@ -182,7 +182,7 @@ func (s *Service) checkIpApi() {
 				defer resp.Body.Close()
 			}
 			if err != nil {
-				if (apiNum+1) == len(s.conf.FetchIpApi) { // 最后一个ipapi也不行还是用域名吧！
+				if (apiNum + 1) == len(s.conf.FetchIpApi) { // 最后一个ipapi也不行还是用域名吧！
 					s.apiLock.Lock()
 					s.conf.FetchApi = s.domain_api
 					s.apiLock.Unlock()
@@ -199,7 +199,7 @@ func (s *Service) checkIpApi() {
 			}
 		}
 
-		time.Sleep(time.Minute * 5)  // 每5分钟测试一次
+		time.Sleep(time.Minute * 5) // 每5分钟测试一次
 	}
 }
 
