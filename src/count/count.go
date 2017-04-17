@@ -116,9 +116,10 @@ func Server() {
 	// 插入数据一小时一次就好
 	for {
 		t := time.Now().UTC()
-		date := t.Format("200601021504")
+		date := t.Format("2006010215")
 		hour := date[8:10]
-		var table = getReadDbName(date[0:10])
+
+		var table = getReadDbName(date)
 
 		if table != "" {
 			if records, err := getData(table, func(data *RawData) []*Count {
