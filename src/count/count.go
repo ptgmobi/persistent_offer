@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -15,7 +16,7 @@ import (
 
 type Count struct {
 	Id         string // ym_123
-	UpdateDate string // 20170809
+	UpdateDate int    // 20170809
 	UpdateHour string // 0-23
 	Channel    string // ym|tym|adst|irs...
 	Platform   string // iOS|Android
@@ -133,7 +134,8 @@ func Server() {
 				for _, country := range content.Attr.Countries {
 					var c Count
 					c.Channel = data.Channel
-					c.UpdateDate = date
+					dateInt, _ := strconv.Atoi(date)
+					c.UpdateDate = dateInt
 					c.UpdateHour = hour
 					c.Id = data.DocId
 					c.Platform = content.Attr.Platform
