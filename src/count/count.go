@@ -21,6 +21,7 @@ type Count struct {
 	Channel    string // ym|tym|adst|irs...
 	Platform   string // iOS|Android
 	Country    string // CN|US|JP...
+	PkgName    string // api.com
 }
 
 /*
@@ -140,6 +141,7 @@ func Server() {
 					c.Id = data.DocId
 					c.Platform = content.Attr.Platform
 					c.Country = country
+					c.PkgName = content.Attr.AppDown.AppPkgName
 					raws = append(raws, &c)
 				}
 				return raws
