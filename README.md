@@ -49,7 +49,7 @@ KEY `idx_adid` (`adid`)
 
 #### 示例：
 
-http://54.255.167.180:10080/persistent/search?time=201701170312&offerid=1234
+http://54.255.165.222:10080/persistent/search?time=201701170312&offerid=1234
 
 ```
 {
@@ -105,11 +105,11 @@ http://54.255.167.180:10080/persistent/search?time=201701170312&offerid=1234
     ]
 }
 ```
-http://54.255.167.180:10080/persistent/search?time=201701171234&docid=ym_12345
+http://54.255.165.222:10080/persistent/search?time=201701171234&docid=ym_12345
 
 查询一个offer在数据库中的插入时间
 
-http://54.255.167.180:10080/persistent/search?docid=2644357
+http://54.255.165.222:10080/persistent/search?docid=2644357
 
 ```json
 {
@@ -123,7 +123,7 @@ http://54.255.167.180:10080/persistent/search?docid=2644357
 ```
 
 通过title进行模糊查询
-http://54.255.167.180:10080/persistent/search?title=今日&time=201702221339&begin=xx&end=yy
+http://54.255.165.222:10080/persistent/search?title=今日&time=201702221339&begin=xx&end=yy
 
 `begin`和`end`两个参数将会添加到sql里的额limit后以实现分页，不提供这两个参数默认返回0-50条记录
 
