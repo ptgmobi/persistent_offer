@@ -277,7 +277,7 @@ func (s *Service) fetchSnapshot(tableName string) error {
 			break
 		}
 
-		for i := 0; i < 5; i++ { // 一次起 20个协程
+		for i := 0; i < 10; i++ { // 一次起 20个协程
 			pageNum++
 			if over || pageNum >= 500 {
 				break
