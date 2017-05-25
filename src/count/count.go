@@ -218,8 +218,7 @@ func delOldData() {
 func Server() {
 	// 插入数据一小时一次就好
 	for {
-		t := time.Now()
-		//t := time.Now().UTC()
+		t := time.Now().UTC()
 		date := t.Format("2006010215")
 		hour := date[8:10]
 

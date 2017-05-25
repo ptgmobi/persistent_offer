@@ -257,72 +257,104 @@ func (s *Service) fetchSnapshot(tableName string) error {
 	}
 	// https://api.cloudmobi.net:9992/dump?page_size=1000&page_num=
 
-	var pageNum = 0
+	over := false
+	ch := make(chan int, 10)
+	defer close(ch)
+
 	snapShotOfferCnt := 0
-	for {
-		pageNum++
-		if pageNum == 100 {
-			s.l.Println("[Warn] FetchSnapshot pageNum >= 100 !")
-		}
 
-		uri := fmt.Sprintf("%s%d", fetchApi, pageNum)
-		s.l.Println("FetchSnapshot FetchApi: ", uri)
-		resp, err := http.Get(uri)
-		if resp != nil {
-			defer resp.Body.Close()
-		}
-		if err != nil {
-			return err
-		}
+	var wg sync.WaitGroup
 
-		var snapshot Snapshot
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			s.l.Println("[Warn] FetchSnapshot read body err: ", err)
-			continue
+	go func() {
+		for offerCnt := range ch {
+			snapShotOfferCnt += offerCnt
 		}
-		err = json.Unmarshal(body, &snapshot)
-		if err != nil {
-			s.l.Println("[Warn] FetchSnapshot unmarshal err: ", err)
-			continue
-		}
-		if len(snapshot.Data) == 0 {
-			s.l.Println("[Warn] FetchSnapshot over, snapShotOfferCnt: ", snapShotOfferCnt)
+	}()
+
+	pageNum := 0
+	for { // 1000 * 500 = 50W offer
+		if over || pageNum >= 500 {
 			break
 		}
 
-		for i := 0; i < len(snapshot.Data); i++ {
-			sqlQuery := "insert into " + tableName + " values(?,?,?,?,?,?,?)"
-
-			offer := snapshot.Data[i]
-			contentJson, err := json.Marshal(offer)
-			if err != nil {
-				s.l.Println("[Warn] getInsertSqlQuery marshal contentJson err: ", err)
-				continue
+		for i := 0; i < 5; i++ { // 一次起 20个协程
+			pageNum++
+			if over || pageNum >= 500 {
+				break
 			}
+			wg.Add(1)
+			go func(page int) {
+				defer wg.Done()
 
-			err = s.db.ExecSqlQueryWithParameter(sqlQuery,
-				offer.Docid,
-				time.Now().Format("200601021504"),
-				offer.Attr.Adid,
-				offer.Attr.AppDown.AppPkgName,
-				offer.Attr.Channel,
-				offer.Attr.FinalUrl,
-				contentJson)
-			if err != nil {
-				s.l.Println("[Warn] FetchSnapshot insertToTable err: ", err)
-				continue
-			}
-			snapShotOfferCnt++
-			s.l.Println("FetchSnapshot insert records success, cnt: ", snapShotOfferCnt)
-		}
+				uri := fmt.Sprintf("%s%d", fetchApi, page)
+				s.l.Println("FetchSnapshot FetchApi: ", uri)
+				resp, err := http.Get(uri)
+				if resp != nil {
+					defer resp.Body.Close()
+				}
+				if err != nil {
+					over = true
+					s.l.Println("[Warn] FetchSnapshot get offer server err: ", err)
+					return
+				}
 
-		currentTotalRecords := pageNum * 1000
-		if snapshot.TotalRecords > 0 && currentTotalRecords >= snapshot.TotalRecords {
-			s.l.Println("FetchSnapshot fetch over, currentTotalRecords: ", currentTotalRecords,
-				" TotalRecords: ", snapshot.TotalRecords)
-			break
+				var snapshot Snapshot
+				body, err := ioutil.ReadAll(resp.Body)
+				if err != nil {
+					over = true
+					s.l.Println("[Warn] FetchSnapshot read body err: ", err)
+					return
+				}
+				err = json.Unmarshal(body, &snapshot)
+				if err != nil {
+					over = true
+					s.l.Println("[Warn] FetchSnapshot unmarshal err: ", err)
+					return
+				}
+				if len(snapshot.Data) == 0 {
+					over = true
+					s.l.Println("[Warn] FetchSnapshot over!!!")
+					return
+				}
+
+				var offerCnt = 0
+				for i := 0; i < len(snapshot.Data); i++ {
+					sqlQuery := "insert into " + tableName + " values(?,?,?,?,?,?,?)"
+
+					offer := snapshot.Data[i]
+					contentJson, err := json.Marshal(offer)
+					if err != nil {
+						s.l.Println("[Warn] getInsertSqlQuery marshal contentJson err: ", err)
+						continue
+					}
+
+					err = s.db.ExecSqlQueryWithParameter(sqlQuery,
+						offer.Docid,
+						time.Now().Format("200601021504"),
+						offer.Attr.Adid,
+						offer.Attr.AppDown.AppPkgName,
+						offer.Attr.Channel,
+						offer.Attr.FinalUrl,
+						contentJson)
+					if err != nil {
+						s.l.Println("[Warn] FetchSnapshot insertToTable err: ", err)
+						continue
+					}
+					offerCnt++
+					s.l.Println("FetchSnapshot insert records success, cnt: ", offerCnt)
+				}
+				ch <- offerCnt
+
+				currentTotalRecords := page * 1000
+				if snapshot.TotalRecords > 0 && currentTotalRecords >= snapshot.TotalRecords {
+					s.l.Println("FetchSnapshot fetch over, currentTotalRecords: ", currentTotalRecords,
+						" TotalRecords: ", snapshot.TotalRecords)
+					over = true
+					return
+				}
+			}(pageNum)
 		}
+		wg.Wait()
 	}
 
 	if snapShotOfferCnt <= 0 {
