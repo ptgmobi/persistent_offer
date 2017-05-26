@@ -250,14 +250,14 @@ func Server() {
 				log.Println("get data err: ", err)
 			} else {
 				insertData(records)
-				//delOldData()
+				delOldData()
 			}
 		} else {
 			log.Println("[Serve] can't get table name!")
 		}
 
 		log.Println("Loop count hour: ", hour)
-		time.Sleep(time.Minute * 30)
+		time.Sleep(time.Minute * 60)
 	}
 }
 
