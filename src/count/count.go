@@ -219,7 +219,7 @@ func Server() {
 	// 插入数据一小时一次就好
 	for {
 		t := time.Now().UTC()
-		date := t.Format("2006010215")
+		date := t.Add(time.Hour * -1).Format("2006010215")
 		hour := date[8:10]
 
 		var table = getReadDbName(date)
