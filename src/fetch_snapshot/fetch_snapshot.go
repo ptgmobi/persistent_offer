@@ -177,25 +177,32 @@ func (s *Service) checkIpApi() {
 		for apiNum := 0; apiNum < len(s.conf.FetchIpApi); apiNum++ {
 			uri := fmt.Sprintf("%s%d", s.conf.FetchIpApi[apiNum], 1)
 			s.l.Println("checkIpApi uri: ", uri)
-			resp, err := http.Get(uri)
-			if resp != nil {
-				resp.Body.Close()
-				continue
-			}
-			if err != nil {
-				if (apiNum + 1) == len(s.conf.FetchIpApi) { // 最后一个ipapi也不行还是用域名吧！
-					s.apiLock.Lock()
-					s.conf.FetchApi = s.domain_api
-					s.apiLock.Unlock()
-					s.l.Println("checkIpApi ipapi don't work use domain api")
+
+			f := func(uri string) bool {
+				resp, err := http.Get(uri)
+				if resp != nil {
+					defer resp.Body.Close()
 				}
-				continue
+				if err != nil {
+					if (apiNum + 1) == len(s.conf.FetchIpApi) { // 最后一个ipapi也不行还是用域名吧！
+						s.apiLock.Lock()
+						s.conf.FetchApi = s.domain_api
+						s.apiLock.Unlock()
+						s.l.Println("checkIpApi ipapi don't work use domain api")
+						return true
+					}
+					return false
+				}
+				if resp.StatusCode == 200 {
+					s.apiLock.Lock()
+					s.conf.FetchApi = s.conf.FetchIpApi[apiNum]
+					s.apiLock.Unlock()
+					s.l.Println("checkIpApi use ipapi: ", s.conf.FetchIpApi[apiNum])
+				}
+				return true
 			}
-			if resp.StatusCode == 200 {
-				s.apiLock.Lock()
-				s.conf.FetchApi = s.conf.FetchIpApi[apiNum]
-				s.apiLock.Unlock()
-				s.l.Println("checkIpApi use ipapi: ", s.conf.FetchIpApi[apiNum])
+
+			if ok := f(uri); ok {
 				break
 			}
 		}
