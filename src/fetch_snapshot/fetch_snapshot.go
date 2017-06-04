@@ -179,7 +179,8 @@ func (s *Service) checkIpApi() {
 			s.l.Println("checkIpApi uri: ", uri)
 			resp, err := http.Get(uri)
 			if resp != nil {
-				defer resp.Body.Close()
+				resp.Body.Close()
+				continue
 			}
 			if err != nil {
 				if (apiNum + 1) == len(s.conf.FetchIpApi) { // 最后一个ipapi也不行还是用域名吧！
