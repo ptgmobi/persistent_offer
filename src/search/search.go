@@ -217,8 +217,10 @@ func (s *Service) getSnapshot(time, docid, offerid, title, begin, end string) (s
 				}
 				if t < new_tbl_time {
 					sqlQuery = "select insertDate, content from " + nearTable + " where content like '%" + title + "%' limit " + begin + "," + end + ";"
-				} else {
+				} else if nearTable > "offer_persistent_"+strconv.Itoa(new_tbl_time) {
 					sqlQuery = "select insertDate, content from " + nearTable + " where title like '%" + title + "%' limit " + begin + "," + end + ";"
+				} else {
+					continue
 				}
 			} else {
 				s.l.Println("on condition can be used, on time")
