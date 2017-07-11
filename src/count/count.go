@@ -20,7 +20,8 @@ type Count struct {
 	Platform   string // iOS|Android
 	Countries  []string
 	PkgName    string // api.com
-	Video      bool   // 是否有视频素材
+	Title      string
+	Video      bool // 是否有视频素材
 }
 
 type OfferRecord struct {
@@ -60,6 +61,7 @@ type RawData struct {
 	AdId       string `gorm:"column:adid"`
 	AppPkgName string `gorm:"column:app_pkg_name"`
 	Channel    string `gorm:"column:channel"`
+	Title      string `gorm:"column:title"`
 	FinalUrl   string `gorm:"column:final_url"`
 	Content    []byte `gorm:"column:content"`
 }
@@ -241,6 +243,7 @@ func Server() {
 				c.Platform = content.Attr.Platform
 				c.Countries = append(c.Countries, content.Attr.Countries...)
 				c.PkgName = content.Attr.AppDown.AppPkgName
+				c.Title = content.Attr.AppDown.Title
 				if strings.Contains(content.Dnf, "video,") {
 					c.Video = true
 				}

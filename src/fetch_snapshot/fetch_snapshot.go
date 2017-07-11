@@ -231,15 +231,17 @@ func (s *Service) deleteOldTable(tables []string) {
 func (s *Service) getCreateTableSqlQuery(tableName string) string {
 	sqlQuery := fmt.Sprintf(
 		`create table %s(
-		docid char(255) not null comment '主键dnfid',
+		id int not null auto_increment comment '主键自增id',
+		docid char(255) not null comment 'dnfid',
 		insertDate char(255) not null comment '插入记录时的时间',
 		adid char(255) not null comment 'offer id',
 		app_pkg_name char(255) comment 'app包名',
 		channel char(255) not null comment '渠道',
+		title varchar(512) comment 'app title',
 		final_url varchar(512) comment '最终的app商店链接',
 		content json,
-		PRIMARY key(docid),
-		key idx_adid (adid)
+		PRIMARY key(id),
+		UNIQUE key uni_idx_docid (docid)
 	)ENGINE=InnoDB default CHARSET=utf8;`, tableName)
 	return sqlQuery
 }
@@ -327,7 +329,7 @@ func (s *Service) fetchSnapshot(tableName string) error {
 
 				var offerCnt = 0
 				for i := 0; i < len(snapshot.Data); i++ {
-					sqlQuery := "insert into " + tableName + " values(?,?,?,?,?,?,?)"
+					sqlQuery := "insert into " + tableName + "(docid,insertDate,adid,app_pkg_name,channel,title,final_url,content) values(?,?,?,?,?,?,?,?)"
 
 					offer := snapshot.Data[i]
 					contentJson, err := json.Marshal(offer)
@@ -342,6 +344,7 @@ func (s *Service) fetchSnapshot(tableName string) error {
 						offer.Attr.Adid,
 						offer.Attr.AppDown.AppPkgName,
 						offer.Attr.Channel,
+						offer.Attr.AppDown.Title,
 						offer.Attr.FinalUrl,
 						contentJson)
 					if err != nil {

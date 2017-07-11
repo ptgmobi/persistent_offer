@@ -210,7 +210,16 @@ func (s *Service) getSnapshot(time, docid, offerid, title, begin, end string) (s
 			} else if len(docid) != 0 {
 				sqlQuery = "select insertDate, content from " + nearTable + " where docid='" + docid + "';"
 			} else if len(title) != 0 {
-				sqlQuery = "select insertDate, content from " + nearTable + " where content like '%" + title + "%' limit " + begin + "," + end + ";"
+				new_tbl_time := 201707110715
+				t, err := strconv.Atoi(time)
+				if err != nil {
+					s.l.Println("time Atoi error:", err)
+				}
+				if t < new_tbl_time {
+					sqlQuery = "select insertDate, content from " + nearTable + " where content like '%" + title + "%' limit " + begin + "," + end + ";"
+				} else {
+					sqlQuery = "select insertDate, content from " + nearTable + " where title like '%" + title + "%' limit " + begin + "," + end + ";"
+				}
 			} else {
 				s.l.Println("on condition can be used, on time")
 			}

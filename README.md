@@ -17,6 +17,7 @@ Create Table: CREATE TABLE `offer_persistent_201701171947` (
 `app_pkg_name` char(255) DEFAULT NULL COMMENT 'app包名',
 `channel` char(255) NOT NULL COMMENT '渠道',
 `final_url` char(255) DEFAULT NULL COMMENT '最终的app商店链接',
+`title` char(255) COMMENT 'APP Title', 
 `content` json DEFAULT NULL,
 PRIMARY KEY (`docid`),
 KEY `idx_adid` (`adid`)
@@ -33,6 +34,7 @@ KEY `idx_adid` (`adid`)
 | app_pkg_name | char(255) | YES  |     | NULL    |       |
 | channel      | char(255) | NO   |     | NULL    |       |
 | final_url    | char(255) | YES  |     | NULL    |       |
+| title        | char(255) | YES  |     | NULL    |       |
 | content      | json      | YES  |     | NULL    |       |
 +--------------+-----------+------+-----+---------+-------+
 ```
