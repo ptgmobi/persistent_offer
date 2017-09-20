@@ -64,14 +64,18 @@ type Attribute struct {
 	Countries        []string         `json:"countries"`
 	Creatives        CreativeLanguage `json:"-"`
 	FinalUrl         string           `json:"final_url"`
+	Fuyu             bool             `json:"fuyu"`
 	Icons            CreativeLanguage `json:"-"`
+	Jstag            bool             `json:"jstag"`
 	LandingType      int              `json:"landing_type"`
 	Payout           float32          `json:"payout"`
 	Platform         string           `json:"platform"`
+	Cp               int              `json:"cp"`
 	ProductCategory  string           `json:"product_category"`
 	RenderImgs       RenderImg        `json:"-"`
 	ThirdPartyClkTks []string         `json:"third_party_clk_tks"`
 	ThirdPartyImpTks []string         `json:"third_party_imp_tks"`
+	Wugan            bool             `json:"wugan"`
 }
 
 type AppDownload struct {
