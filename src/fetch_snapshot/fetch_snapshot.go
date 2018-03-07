@@ -74,11 +74,11 @@ type Attribute struct {
 	OfferSemiPmtEnable int              `json:"offer_semi_pmt_enable"`
 	PkgPmtEnable       int              `json:"pkg_pmt_enable"`
 	PkgSemiPmtEnable   int              `json:"pkg_semi_pmt_enable"`
-	PreRate            int              `json:"pre_rate"`
+	PreRate            float64          `json:"pre_rate"`
 	Spon               string           `json:"spon"`
 	Tbk                string           `json:"tbk"`
 	TbkT               int              `json:"tbk_t"`
-	TrafficRate        float32          `json:"traffic_rate"`
+	TrafficRate        float64          `json:"traffic_rate"`
 	Payout             float32          `json:"payout"`
 	Platform           string           `json:"platform"`
 	Cp                 int              `json:"cp"`
