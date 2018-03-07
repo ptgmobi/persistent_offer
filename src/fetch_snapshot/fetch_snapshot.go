@@ -53,33 +53,48 @@ type Offer struct {
 }
 
 type Attribute struct {
-	AdExpireTime     int              `json:"ad_expire_time"`
-	Adid             string           `json:"adid"`
-	AppCategory      []string         `json:"app_category"`
-	AppDown          AppDownload      `json:"app_download"`
-	Channel          string           `json:"channel"`
-	ClickCallback    string           `json:"click_callback"`
-	ClkTks           []string         `json:"clk_tks"`
-	ClkUrl           string           `json:"clk_url"`
-	Countries        []string         `json:"countries"`
-	Creatives        CreativeLanguage `json:"-"`
-	FinalUrl         string           `json:"final_url"`
-	Fuyu             bool             `json:"fuyu"`
-	Icons            CreativeLanguage `json:"-"`
-	Jstag            bool             `json:"jstag"`
-	LandingType      int              `json:"landing_type"`
-	Payout           float32          `json:"payout"`
-	Platform         string           `json:"platform"`
-	Cp               int              `json:"cp"`
-	ProductCategory  string           `json:"product_category"`
-	RenderImgs       RenderImg        `json:"-"`
-	ThirdPartyClkTks []string         `json:"third_party_clk_tks"`
-	ThirdPartyImpTks []string         `json:"third_party_imp_tks"`
-	Wugan            bool             `json:"wugan"`
+	AdExpireTime       int              `json:"ad_expire_time"`
+	Adid               string           `json:"adid"`
+	AppCategory        []string         `json:"app_category"`
+	AppDown            AppDownload      `json:"app_download"`
+	Channel            string           `json:"channel"`
+	ClickCallback      string           `json:"click_callback"`
+	ClkTks             []string         `json:"clk_tks"`
+	ClkUrl             string           `json:"clk_url"`
+	Countries          []string         `json:"countries"`
+	Creatives          CreativeLanguage `json:"creatives"`
+	FinalUrl           string           `json:"final_url"`
+	Fuyu               bool             `json:"fuyu"`
+	Icons              CreativeLanguage `json:"icons"`
+	Videos             VideoLanguage    `json:"videos"`
+	Jstag              bool             `json:"jstag"`
+	LandingType        int              `json:"landing_type"`
+	Network            int              `json:"network"`
+	OfferPmtEnable     int              `json:"offer_pmt_enable"`
+	OfferSemiPmtEnable int              `json:"offer_semi_pmt_enable"`
+	PkgPmtEnable       int              `json:"pkg_pmt_enable"`
+	PkgSemiPmtEnable   int              `json:"pkg_semi_pmt_enable"`
+	PreRate            int              `json:"pre_rate"`
+	Spon               string           `json:"spon"`
+	Tbk                string           `json:"tbk"`
+	TbkT               int              `json:"tbk_t"`
+	TrafficRate        float32          `json:"traffic_rate"`
+	Payout             float32          `json:"payout"`
+	Platform           string           `json:"platform"`
+	Cp                 int              `json:"cp"`
+	ProductCategory    string           `json:"product_category"`
+	RenderImgs         RenderImg        `json:"-"`
+	ThirdPartyClkTks   []string         `json:"third_party_clk_tks"`
+	ThirdPartyImpTks   []string         `json:"third_party_imp_tks"`
+	UpdateTime         string           `json:"update_time"`
+	VastUrl            string           `json:"vast_url"`
+	UniqId             string           `json:"uniq_id"`
+	Wugan              bool             `json:"wugan"`
 }
 
 type AppDownload struct {
 	AppPkgName   string  `json:"app_pkg_name"`
+	BundleId     string  `json:"bundle_id"`
 	Description  string  `json:"-"`
 	Download     string  `json:"download"`
 	Rate         float32 `json:"rate"`
@@ -93,11 +108,34 @@ type CreativeLanguage struct {
 	ALL []Creative `json:"ALL"`
 }
 
+type VideoLanguage struct {
+	ALL []Video `json:"ALL"`
+}
+
 type Creative struct {
-	Height   int    `json:"height"`
-	Language string `json:"language"`
-	Url      string `json:"url"`
-	Width    int    `json:"width"`
+	Language    string `json:"language"`
+	Cid         string `json:"creative_id"`
+	Oid         string `json:"old_id"`
+	DomesticCdn string `json:"domestic_cdn"`
+	OverseasCdn string `json:"overseas_cdn"`
+	Url         string `json:"url"`
+	Width       int    `json:"width"`
+	Height      int    `json:"height"`
+	Size        int    `json:"size"`
+}
+
+type Video struct {
+	Language    string `json:"language"`
+	Cid         string `json:"id"`
+	Oid         string `json:"old_id"`
+	DomesticCdn string `json:"domestic_cdn"`
+	OverseasCdn string `json:"overseas_cdn"`
+	Ratio       string `json:"ratio"`
+	Type        string `json:"type"`
+	Url         string `json:"url"`
+	Width       int    `json:"width"`
+	Height      int    `json:"height"`
+	Size        int    `json:"size"`
 }
 
 type RenderImg struct {
